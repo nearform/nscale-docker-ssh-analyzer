@@ -27,8 +27,16 @@ var parseOutput = function(stdout/*, stderr*/) {
   return JSON.parse(filtered);
 };
 
-function tearUp(keyPath, ipAddress, cb) {
-  childProcess.exec('sh ' + __dirname + '/scripts/pipe.sh ' + keyPath + ' ' +  ipAddress, function(err/*, stdout, stderr*/) {
+function setUp(user, keyPath, ipAddress, cb) {
+  var cmd = [
+    'sh',
+    __dirname + '/scripts/pipe.sh',
+    user,
+    keyPath,
+    ipAddress
+  ].join(' ');
+
+  childProcess.exec(cmd, function(err/*, stdout, stderr*/) {
     cb(err);
   });
 }
@@ -36,8 +44,16 @@ function tearUp(keyPath, ipAddress, cb) {
 /**
  * get images, note the script implementing this uses http/1.0 to prevent chunked encoding
  */
-function images(keyPath, ipAddress, cb) {
-  childProcess.exec('sh ' + __dirname + '/scripts/getImages.sh ' + keyPath + ' ' +  ipAddress, function(err, stdout, stderr) {
+function images(user, keyPath, ipAddress, cb) {
+  var cmd = [
+    'sh',
+    __dirname + '/scripts/getImages.sh',
+    user,
+    keyPath,
+    ipAddress
+  ].join(' ');
+
+  childProcess.exec(cmd, function(err, stdout, stderr) {
     cb(err, parseOutput(stdout, stderr));
   });
 }
@@ -45,34 +61,45 @@ function images(keyPath, ipAddress, cb) {
 /**
  * get containers, note the script implementing this uses http/1.0 to prevent chunked encoding
  */
-function containers(keyPath, ipAddress, cb) {
-  childProcess.exec('sh ' + __dirname + '/scripts/getContainers.sh ' + keyPath + ' ' +  ipAddress, function(err, stdout, stderr) {
+function containers(user, keyPath, ipAddress, cb) {
+  var cmd = [
+    'sh',
+    __dirname + '/scripts/getContainers.sh',
+    user,
+    keyPath,
+    ipAddress
+  ].join(' ');
+
+  childProcess.exec(cmd, function(err, stdout, stderr) {
     cb(err, parseOutput(stdout, stderr));
   });
 }
 
 function remoteDocker(opts) {
+  // TODO remove ubuntu default, raise error
+  // I keep it here for backward compatibility
+  var user = opts.user || 'ubuntu';
   var identityFile = opts.identityFile;
 
   function queryImages(ipAddress, cb) {
-    tearUp(identityFile, ipAddress, function(err) {
+    setUp(user, identityFile, ipAddress, function(err) {
       if (err) {
         return cb(err);
       }
     });
     setTimeout(function() {
-      images(identityFile, ipAddress, cb);
+      images(user, identityFile, ipAddress, cb);
     }, 2000);
   };
 
   function queryContainers(ipAddress, cb) {
-    tearUp(identityFile, ipAddress, function(err) {
+    setUp(user, identityFile, ipAddress, function(err) {
       if (err) {
         return cb(err);
       }
     });
     setTimeout(function() {
-      containers(identityFile, ipAddress, function(err, containers) {
+      containers(user, identityFile, ipAddress, function(err, containers) {
         cb(err, containers);
       });
     }, 2000);
