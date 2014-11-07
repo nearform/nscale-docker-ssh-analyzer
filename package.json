@@ -1,0 +1,24 @@
+{
+  "name": "nscale-docker-ssh-analyzer",
+  "version": "0.0.1",
+  "description": "nscale-docker-ssh-analyzer ==========================",
+  "main": "dockerApi.js",
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "nscale-docker-analyzer": "^0.4.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nearform/nscale-docker-ssh-analyzer.git"
+  },
+  "author": "Matteo Collina <matteo.collina@nearform.com>",
+  "license": "Artistic License 2.0",
+  "bugs": {
+    "url": "https://github.com/nearform/nscale-docker-ssh-analyzer/issues"
+  },
+  "homepage": "https://github.com/nearform/nscale-docker-ssh-analyzer"
+}
