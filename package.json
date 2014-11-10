@@ -1,6 +1,6 @@
 {
   "name": "nscale-docker-ssh-analyzer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "nscale-docker-ssh-analyzer ==========================",
   "main": "index.js",
   "dependencies": {
