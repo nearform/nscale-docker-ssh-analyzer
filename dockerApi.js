@@ -82,6 +82,9 @@ function remoteDocker(opts) {
   var identityFile = opts.identityFile;
 
   function queryImages(ipAddress, cb) {
+    if (!ipAddress) {
+      return cb(null, []);
+    }
     setUp(user, identityFile, ipAddress, function(err) {
       if (err) {
         return cb(err);
@@ -93,6 +96,10 @@ function remoteDocker(opts) {
   };
 
   function queryContainers(ipAddress, cb) {
+    if (!ipAddress) {
+      return cb(null, []);
+    }
+
     setUp(user, identityFile, ipAddress, function(err) {
       if (err) {
         return cb(err);
