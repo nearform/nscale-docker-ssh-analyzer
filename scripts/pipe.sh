@@ -9,9 +9,9 @@ PID1=-1
 PID2=-1
 RUNNING=true
 echo --ready--
-  sudo nc -l -n 127.0.0.1 12345 > $PIPE_IN < $PIPE_OUT &
+  nc -l -n 127.0.0.1 12345 > $PIPE_IN < $PIPE_OUT &
   PID1=$!
-  sudo nc -U /var/run/docker.sock < $PIPE_IN > $PIPE_OUT &
+  nc -U /var/run/docker.sock < $PIPE_IN > $PIPE_OUT &
   PID2=$!
   wait $PID1 $PID2 2> /dev/null
 echo --done--
