@@ -4,6 +4,7 @@
   "description": "nscale-docker-ssh-analyzer ==========================",
   "main": "index.js",
   "dependencies": {
+    "bunyan": "^1.2.3",
     "lodash": "^2.4.1",
     "nscale-docker-analyzer": "^0.4.2"
   },

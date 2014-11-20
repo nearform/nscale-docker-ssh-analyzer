@@ -14,6 +14,9 @@
 
 'use strict';
 
+var bunyan = require('bunyan');
+var logger = bunyan.createLogger({ name: 'docker-ssh' });
+
 var childProcess = require('child_process');
 var filter = require('./filter');
 
@@ -36,7 +39,11 @@ function setUp(user, keyPath, ipAddress, cb) {
     ipAddress
   ].join(' ');
 
-  childProcess.exec(cmd, function(err/*, stdout, stderr*/) {
+  logger.debug('setup: ' + cmd);
+  childProcess.exec(cmd, function(err, stdout, stderr) {
+    logger.debug('setup err: ' + err);
+    logger.debug('setup stdout: ' + stdout);
+    logger.debug('setup stderr: ' + stderr);
     cb(err);
   });
 }
@@ -53,7 +60,11 @@ function images(user, keyPath, ipAddress, cb) {
     ipAddress
   ].join(' ');
 
+  logger.debug('images: ' + cmd);
   childProcess.exec(cmd, function(err, stdout, stderr) {
+    logger.debug('images err: ' + err);
+    logger.debug('images stdout: ' + stdout);
+    logger.debug('images stderr: ' + stderr);
     cb(err, parseOutput(stdout, stderr));
   });
 }
@@ -70,7 +81,11 @@ function containers(user, keyPath, ipAddress, cb) {
     ipAddress
   ].join(' ');
 
+  logger.debug('containers: ' + cmd);
   childProcess.exec(cmd, function(err, stdout, stderr) {
+    logger.debug('containers err: ' + err);
+    logger.debug('containers stdout: ' + stdout);
+    logger.debug('containers stderr: ' + stderr);
     cb(err, parseOutput(stdout, stderr));
   });
 }
@@ -93,7 +108,7 @@ function remoteDocker(opts) {
     setTimeout(function() {
       images(user, identityFile, ipAddress, cb);
     }, 2000);
-  };
+  }
 
   function queryContainers(ipAddress, cb) {
     if (!ipAddress) {
@@ -110,12 +125,12 @@ function remoteDocker(opts) {
         cb(err, containers);
       });
     }, 2000);
-  };
+  }
 
   return {
     queryImages: queryImages,
     queryContainers: queryContainers
-  }
+  };
 }
 
 module.exports = remoteDocker;
