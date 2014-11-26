@@ -1,12 +1,12 @@
 {
   "name": "nscale-docker-ssh-analyzer",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "nscale-docker-ssh-analyzer ==========================",
   "main": "index.js",
   "dependencies": {
     "bunyan": "^1.2.3",
     "lodash": "^2.4.1",
-    "nscale-docker-analyzer": "~0.10.0"
+    "nscale-docker-analyzer": "~0.10.1"
   },
   "devDependencies": {},
   "scripts": {
