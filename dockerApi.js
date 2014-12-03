@@ -11,6 +11,21 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/*
+ * External optimizations
+ *
+ * - Reuse connections on the client:
+ *
+ * /etc/ssh_config
+ * Host *
+ *   ControlMaster auto
+ *   ControlPath /tmp/%r@%h:%p
+ *   ControlPersist 30m
+ *
+ * - Don't use dns on the server:
+ * /etc/sshd_config
+ * UseDNS no
+ */
 
 'use strict';
 
@@ -20,7 +35,9 @@ var logger = bunyan.createLogger({ name: 'docker-ssh' });
 var childProcess = require('child_process');
 var filter = require('./filter');
 
-var parseOutput = function(stdout/*, stderr*/) {
+
+
+var parseOutput = function(stdout) {
   var filtered = filter.dropOutside(stdout.toString('utf8'), /^\[\{/, /\]\}/);
   filtered = filtered.replace(/[\r\n]+/gm,'');
 
@@ -30,23 +47,34 @@ var parseOutput = function(stdout/*, stderr*/) {
   return JSON.parse(filtered);
 };
 
-function setUp(user, keyPath, ipAddress, cb) {
+
+
+/**
+ * preconnect in the case that ssh multiplexing is operative
+ */
+function preconnect(user, keyPath, ipAddress, cb) {
   var cmd = [
-    'sh',
-    __dirname + '/scripts/pipe.sh',
+    __dirname + '/scripts/pre.sh',
     user,
     keyPath,
     ipAddress
-  ].join(' ');
+  ];
 
-  logger.debug('setup: ' + cmd);
-  childProcess.exec(cmd, function(err, stdout, stderr) {
-    logger.debug('setup err: ' + err);
-    logger.debug('setup stdout: ' + stdout);
-    logger.debug('setup stderr: ' + stderr);
-    cb(err);
+  var pre = childProcess.spawn('sh', cmd);
+
+  pre.stdout.on('data', function (data) {
+    console.log('stdout: ' + data);
+    if (data.toString().indexOf('--ready--') !== -1) {
+      cb();
+    }
+  });
+
+  pre.stderr.on('data', function (data) { 
+    logger.debug('data: ' + data); 
   });
 }
+
+
 
 /**
  * get images, note the script implementing this uses http/1.0 to prevent chunked encoding
@@ -69,6 +97,8 @@ function images(user, keyPath, ipAddress, cb) {
   });
 }
 
+
+
 /**
  * get containers, note the script implementing this uses http/1.0 to prevent chunked encoding
  */
@@ -90,42 +120,40 @@ function containers(user, keyPath, ipAddress, cb) {
   });
 }
 
+
+
 function remoteDocker(opts) {
-  // TODO remove ubuntu default, raise error
-  // I keep it here for backward compatibility
+  // TODO remove ubuntu default, raise error I keep it here for backward compatibility
   var user = opts.user || 'ubuntu';
   var identityFile = opts.identityFile;
 
+
+
   function queryImages(ipAddress, cb) {
-    if (!ipAddress) {
-      return cb(null, []);
-    }
-    setUp(user, identityFile, ipAddress, function(err) {
-      if (err) {
-        return cb(err);
-      }
+    if (!ipAddress) { return cb(null, []); }
+
+    preconnect(user, identityFile, ipAddress, function(err) {
+      if (err) { return cb(err); }
+      images(user, identityFile, ipAddress, function(err, images) {
+        cb(err, images);
+      });
     });
-    setTimeout(function() {
-      images(user, identityFile, ipAddress, cb);
-    }, 2000);
   }
 
-  function queryContainers(ipAddress, cb) {
-    if (!ipAddress) {
-      return cb(null, []);
-    }
 
-    setUp(user, identityFile, ipAddress, function(err) {
-      if (err) {
-        return cb(err);
-      }
-    });
-    setTimeout(function() {
+
+  function queryContainers(ipAddress, cb) {
+    if (!ipAddress) { return cb(null, []); }
+
+    preconnect(user, identityFile, ipAddress, function(err) {
+      if (err) { return cb(err); }
       containers(user, identityFile, ipAddress, function(err, containers) {
         cb(err, containers);
       });
-    }, 2000);
+    });
   }
+
+
 
   return {
     queryImages: queryImages,
@@ -134,3 +162,4 @@ function remoteDocker(opts) {
 }
 
 module.exports = remoteDocker;
+
