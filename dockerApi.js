@@ -63,7 +63,7 @@ function preconnect(user, keyPath, ipAddress, cb) {
   var pre = childProcess.spawn('sh', cmd);
 
   pre.stdout.on('data', function (data) {
-    console.log('stdout: ' + data);
+    logger.debug('stdout: ' + data);
     if (data.toString().indexOf('--ready--') !== -1) {
       cb();
     }
