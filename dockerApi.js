@@ -31,10 +31,13 @@
 
 var bunyan = require('bunyan');
 var logger = bunyan.createLogger({ name: 'docker-ssh' });
+var portscanner = require('portscanner');
+var sshCheck = require('nscale-util').sshcheck();
 
 var childProcess = require('child_process');
 var filter = require('./filter');
-
+var POLL_INTERVAL = 5000;
+var MAX_POLLS = 30;
 
 
 var parseOutput = function(stdout) {
@@ -52,25 +55,34 @@ var parseOutput = function(stdout) {
 /**
  * preconnect in the case that ssh multiplexing is operative
  */
-function preconnect(user, keyPath, ipAddress, cb) {
-  var cmd = [
-    __dirname + '/scripts/pre.sh',
-    user,
-    keyPath,
-    ipAddress
-  ];
+function preconnect(user, sshKeyPath, ipaddress, cb, pollCount) {
+  if (pollCount === undefined) {
+    pollCount = 0;
+  }
 
-  var pre = childProcess.spawn('sh', cmd);
+  logger.info({
+    user: user,
+    identityFile: sshKeyPath,
+    ipAddress: ipaddress
+  }, 'waiting for connectivity');
 
-  pre.stdout.on('data', function (data) {
-    logger.debug('stdout: ' + data);
-    if (data.toString().indexOf('--ready--') !== -1) {
-      cb();
+  portscanner.checkPortStatus(22, ipaddress, function(err, status) {
+    if (status === 'closed') {
+      if (pollCount > MAX_POLLS) {
+        pollCount = 0;
+        cb('timeout exceeded - unable to connect to: ' + ipaddress);
+      }
+      else {
+        pollCount = pollCount + 1;
+        setTimeout(function() { preconnect(user, sshKeyPath, ipaddress, cb, pollCount); }, POLL_INTERVAL);
+      }
     }
-  });
-
-  pre.stderr.on('data', function (data) { 
-    logger.debug('data: ' + data); 
+    else if (status === 'open') {
+      pollCount = 0;
+      sshCheck.check(ipaddress, user, sshKeyPath, null, function(err) {
+        cb(err);
+      });
+    }
   });
 }
 
