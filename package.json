@@ -7,7 +7,7 @@
     "bunyan": "^1.2.3",
     "lodash": "^2.4.1",
     "nscale-docker-analyzer": "~0.14.3",
-    "nscale-util": "^0.11.2",
+    "nscale-util": "^0.12.0",
     "portscanner": "^1.0.0"
   },
   "devDependencies": {},
