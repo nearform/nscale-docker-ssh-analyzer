@@ -1,4 +1,4 @@
-ssh -T -i "$2" "$1@$3" <<'ENDSSH'
+ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes -o ConnectTimeout=10 -T -i "$2" "$1@$3" <<'ENDSSH'
 PIPE_IN="/tmp/piper-pipe-in"
 PIPE_OUT="/tmp/piper-pipe-out"
 rm $PIPE_IN &> /dev/null
